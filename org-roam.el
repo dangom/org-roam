@@ -1143,6 +1143,28 @@ file."
     (add-hook 'after-save-hook #'org-roam-db--update-file nil t)
     (org-roam-buffer--update-maybe :redisplay t)))
 
+(defun org-roam--open-fuzzy-link (link)
+  "Opens Org fuzzy links like [[Title]].
+
+To be added to `org-open-link-functions'. This function always
+resolves, completely replacing Org's original fuzzy link opening behaviour.
+
+1. If there is no resolved file, an Org-roam capture process is launched.
+2. If there is one resolved file, navigate to the file.
+3. If there are more than one resolved files, prompt for the correct file, and open it."
+  (when (org-roam--org-roam-file-p)
+    (let ((files (mapcar #'car (org-roam-db-query [:select [titles:file] :from titles
+                                                   :where (= titles:title $v1)]
+                                                  (vector link)))))
+      (pcase files
+        ('nil (org-roam-find-file link))
+        (`(,file) (org-roam--find-file file))
+        (_
+         (progn
+           (let ((file (completing-read "Select file: " files)))
+             (org-roam--find-file file)))))
+      t)))
+
 (defun org-roam--delete-file-advice (file &optional _trash)
   "Advice for maintaining cache consistency when FILE is deleted."
   (when (and (not (auto-save-file-name-p file))
@@ -1292,6 +1314,7 @@ M-x info for more information at Org-roam > Installation > Post-Installation Tas
     (add-hook 'find-file-hook #'org-roam--find-file-hook-function)
     (add-hook 'kill-emacs-hook #'org-roam-db--close-all)
     (add-hook 'org-open-at-point-functions #'org-roam-open-id-at-point)
+    (add-hook 'org-open-link-functions #'org-roam--open-fuzzy-link)
     (advice-add 'rename-file :after #'org-roam--rename-file-advice)
     (advice-add 'delete-file :before #'org-roam--delete-file-advice)
     (when (fboundp 'org-link-set-parameters)
@@ -1303,6 +1326,7 @@ M-x info for more information at Org-roam > Installation > Post-Installation Tas
     (remove-hook 'find-file-hook #'org-roam--find-file-hook-function)
     (remove-hook 'kill-emacs-hook #'org-roam-db--close-all)
     (remove-hook 'org-open-at-point-functions #'org-roam-open-id-at-point)
+    (remove-hook 'org-open-link-functions #'org-roam--open-fuzzy-link)
     (advice-remove 'rename-file #'org-roam--rename-file-advice)
     (advice-remove 'delete-file #'org-roam--delete-file-advice)
     (when (fboundp 'org-link-set-parameters)
