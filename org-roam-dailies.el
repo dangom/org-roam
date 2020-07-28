@@ -188,7 +188,7 @@ creating an entry."
 ;; Navigation
 ;;----------------------------------------------------------------------------
 (defun org-roam-dailies--file-to-date (&optional file)
-  "Get date from FILE or current-buffer.
+  "Get date from FILE or current buffer.
 
 Return a cons whose  encoded timestamp."
   (let ((file (or file
