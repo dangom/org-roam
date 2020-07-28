@@ -167,13 +167,16 @@ With numeric argument N, use N days in the future."
 ;;----------------------------------------------------------------------------
 ;; Date
 ;;----------------------------------------------------------------------------
-(defun org-roam-dailies-capture-date (&optional goto)
+(defun org-roam-dailies-capture-date (&optional goto prefer-future)
   "Create an entry in the daily note for a date using the calendar.
+
+Prefer past dates, unless PREFER-FUTURE is non-nil.
 
 With a `C-u' prefix or when GOTO is non-nil, go the note without
 creating an entry."
   (interactive "P")
-  (let ((time (org-read-date nil 'to-time nil "Date:  ")))
+  (let ((time (let ((org-read-date-prefer-future prefer-future))
+                (org-read-date nil t nil "Date: "))))
     (org-roam-dailies--capture time goto)))
 
 (defun org-roam-dailies-find-date ()
