@@ -133,8 +133,8 @@ When GOTO is non-nil, go the note without creating an entry."
 
 With numeric argument N, use N days in the future.
 
-When GOTO is non-nil or with a C-u prefix argument, go the note
-without creating an entry."
+With a `C-u' prefix or when GOTO is non-nil, go the note without
+creating an entry."
   (interactive "p")
   (org-roam-dailies--capture (time-add (* n 86400) (current-time)) goto))
 
@@ -170,8 +170,8 @@ With numeric argument N, use N days in the future."
 (defun org-roam-dailies-capture-date (&optional goto)
   "Create an entry in the daily note for a date using the calendar.
 
-When GOTO is non-nil or with a C-u prefix argument, go the note
-without creating an entry."
+With a `C-u' prefix or when GOTO is non-nil, go the note without
+creating an entry."
   (interactive "P")
   (let ((time (org-read-date nil 'to-time nil "Date:  ")))
     (org-roam-dailies--capture time goto)))
