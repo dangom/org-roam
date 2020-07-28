@@ -214,23 +214,58 @@ Otherwise, use the file visited by the current buffer."
                          (file-truename))))
     (directory-files-recursively file-or-dir "\.*")))
 
-(defun org-roam-dailies--sort-files-by-date (&optional directory)
-  "Sort files in DIRECTORY or cwd by date."
-  (let ((files (org-roam-dailies--list-files directory)))
+(defun org-roam-dailies--sort-files-by-date (&optional file-or-dir)
+  "Sort files in FILE-OR-DIR by date.
+
+FILE-OR-DIR can either be the path to a file or a directory.
+Otherwise, use the file visited by the current buffer."
+  (let ((files (org-roam-dailies--list-files file-or-dir)))
     (->> (mapcar #'org-roam-dailies--file-to-date files)
          (seq-sort-by #'cadr
                       #'time-less-p)
          (mapcar #'car))))
 
-(defun org-roam-dailies-previous-note ()
-  "Find previous note."
-  (let* ((current-date (-> (or (buffer-base-buffer)
-                               (current-buffer))
-                           (buffer-file-name)
-                           (file-name-nondirectory)
-                           (file-name-sans-extension)
-                           (parse-time-string))))
-    current-date))
+(defun org-roam-dailies--find-next-note-path (&optional n file)
+  "Find next daily note from FILE.
+
+With numeric argument N, find note N days in the future. If N is
+negative, find note N days in the past.
+
+If FILE is not provided, use the file visited by the current
+buffer."
+  (let* ((file (or file
+                   (-> (buffer-base-buffer)
+                       (buffer-file-name))))
+         (n (or n 1))
+         (list (org-roam-dailies--sort-files-by-date file))
+         (position
+          (cl-position-if (lambda (candidate)
+                            (string= file candidate))
+                          list)))
+    (pcase n
+      ((pred (natnump))
+       (when (eq position (- (length list) 1))
+         (user-error "Already at newest note")))
+      (_
+       (when (eq position 0)
+         (user-error "Already at oldest note"))))
+    (nth (+ position n) list)))
+
+(defun org-roam-dailies-find-next-note (&optional n)
+  "Find next daily note.
+
+With numeric argument N, find note N days in the future. If N is
+negative, find note N days in the past."
+  (interactive "p")
+  (find-file (org-roam-dailies--find-next-note-path n)))
+
+(defun org-roam-dailies--find-previous-note (&optional n)
+  "Find previous daily note.
+
+With numeric argument N, find note N days in the past. If N is
+negative, find note N days in the future."
+  (interactive "p")
+  (org-roam-dailies-find-next-note (- n)))
 
 (provide 'org-roam-dailies)
 
