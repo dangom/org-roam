@@ -190,7 +190,8 @@ creating an entry."
 (defun org-roam-dailies--file-to-date (&optional file)
   "Get date from FILE or current buffer.
 
-Return a cons whose  encoded timestamp."
+Return a cons of the format (file . time) where 'time is encoded.
+See `encode-time' for details."
   (let ((file (or file
                   (-> (buffer-base-buffer)
                       (buffer-file-name)))))
