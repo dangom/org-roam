@@ -39,9 +39,8 @@
 (require 'org-roam-macs)
 
 (defcustom org-roam-dailies-capture-templates
-  '(("d" "daily" plain (function org-roam-capture--get-point)
-     ""
-     :immediate-finish t
+  '(("d" "daily" entry (function org-roam-capture--get-point)
+     "* %?"
      :file-name "%<%Y-%m-%d>"
      :head "#+title: %<%Y-%m-%d>"))
   "Capture templates for daily notes in Org-roam."

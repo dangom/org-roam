@@ -426,15 +426,25 @@ the file if the original value of :no-save is not t and
       (make-directory (file-name-directory file-path) t)
       (org-roam-capture--put :orig-no-save (org-capture-get :no-save)
                              :new-file t)
-      (org-capture-put :template
-                       ;; Fixes org-capture-place-plain-text throwing 'invalid search bound'
-                       ;; when both :unnarowed t and "%?" is missing from the template string;
-                       ;; may become unnecessary when the upstream bug is fixed
-                       (if (s-contains-p "%?" roam-template)
-                           roam-template
-                         (concat roam-template "%?"))
-                       :type 'plain
-                       :no-save t))
+      (pcase org-roam-capture--context
+        ('dailies
+         ;; Populate the header of the daily file before capture to prevent it
+         ;; from appearing in the buffer-restriction
+         (save-window-excursion
+           (find-file file-path)
+           (insert (substring (org-capture-fill-template (concat roam-head "*"))
+                              0 -2)))
+         (org-capture-put :template org-template))
+        (_
+         (org-capture-put :template
+           ;; Fixes org-capture-place-plain-text throwing 'invalid search bound'
+           ;; when both :unnarowed t and "%?" is missing from the template string;
+           ;; may become unnecessary when the upstream bug is fixed
+           (if (s-contains-p "%?" roam-template)
+               roam-template
+             (concat roam-template "%?"))
+           :type 'plain)))
+      (org-capture-put :no-save t))
     file-path))
 
 (defun org-roam-capture--get-point ()
