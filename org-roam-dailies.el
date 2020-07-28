@@ -99,39 +99,87 @@ Template string   :\n%v")
 (declare-function org-roam--file-path-from-id "org-roam")
 (declare-function org-roam-mode               "org-roam")
 
-(defun org-roam-dailies--file-for-time (time)
-  "Create and find file for TIME."
+(defun org-roam-dailies--capture (time &optional goto)
+  "Capture an entry in a daily note for TIME, creating it if necessary.
+
+When GOTO is non-nil, go the note without creating an entry."
+  (unless org-roam-mode (org-roam-mode))
   (let ((org-roam-capture-templates org-roam-dailies-capture-templates)
         (org-roam-capture--info (list (cons 'time time)))
         (org-roam-capture--context 'dailies))
     (org-roam--with-template-error 'org-roam-dailies-capture-templates
-      (org-roam-capture--capture))))
+      (org-roam-capture--capture (when goto '(4))))))
 
-(defun org-roam-dailies-today ()
-  "Create and find the daily note for today."
+;;----------------------------------------------------------------------------
+;; Today
+;;----------------------------------------------------------------------------
+(defun org-roam-dailies-capture-today (&optional goto)
+  "Create an entry in the daily note for today.
+
+When GOTO is non-nil, go the note without creating an entry."
+  (interactive "P")
+  (org-roam-dailies--capture (current-time) goto))
+
+(defun org-roam-dailies-find-today ()
+  "Find the daily note for today, creating it if necessary."
   (interactive)
-  (unless org-roam-mode (org-roam-mode))
-  (org-roam-dailies--file-for-time (current-time)))
+  (org-roam-dailies-capture-today t))
 
-(defun org-roam-dailies-tomorrow (n)
-  "Create and find the daily note for tomorrow.
+;;----------------------------------------------------------------------------
+;; Tomorrow
+;;----------------------------------------------------------------------------
+(defun org-roam-dailies-capture-tomorrow (n &optional goto)
+  "Create an entry in the daily note for tomorrow.
+
+With numeric argument N, use N days in the future.
+
+When GOTO is non-nil or with a C-u prefix argument, go the note
+without creating an entry."
+  (interactive "p")
+  (org-roam-dailies--capture (time-add (* n 86400) (current-time)) goto))
+
+(defun org-roam-dailies-find-tomorrow (n)
+  "Find the daily note for tomorrow, creating it if necessary.
+
 With numeric argument N, use N days in the future."
   (interactive "p")
-  (unless org-roam-mode (org-roam-mode))
-  (org-roam-dailies--file-for-time (time-add (* n 86400) (current-time))))
+  (org-roam-dailies-capture-tomorrow n t))
 
-(defun org-roam-dailies-yesterday (n)
-  "Create and find the file for yesterday.
-With numeric argument N, use N days in the past."
+;;----------------------------------------------------------------------------
+;; Yesterday
+;;----------------------------------------------------------------------------
+(defun org-roam-dailies-capture-yesterday (n &optional goto)
+  "Create an entry in the daily note for yesteday.
+
+With numeric argument N, use N days in the past.
+
+When GOTO is non-nil, go the note without creating an entry."
   (interactive "p")
-  (unless org-roam-mode (org-roam-mode))
-  (org-roam-dailies-tomorrow (- n)))
+  (org-roam-dailies-capture-tomorrow (- n) goto))
 
-(defun org-roam-dailies-date ()
-  "Create the file for any date using the calendar interface."
-  (interactive)
+(defun org-roam-dailies-find-yesterday (n)
+  "Find the daily note for yesterday, creating it if necessary.
+
+With numeric argument N, use N days in the future."
+  (interactive "p")
+  (org-roam-dailies-capture-tomorrow (- n) t))
+
+;;----------------------------------------------------------------------------
+;; Date
+;;----------------------------------------------------------------------------
+(defun org-roam-dailies-capture-date (&optional goto)
+  "Create an entry in the daily note for a date using the calendar.
+
+When GOTO is non-nil or with a C-u prefix argument, go the note
+without creating an entry."
+  (interactive "P")
   (let ((time (org-read-date nil 'to-time nil "Date:  ")))
-    (org-roam-dailies--file-for-time time)))
+    (org-roam-dailies--capture time goto)))
+
+(defun org-roam-dailies-find-date ()
+  "Find the daily note for a date using the calendar, creating it if necessary."
+  (interactive)
+  (org-roam-dailies-capture-date t))
 
 (provide 'org-roam-dailies)
 
