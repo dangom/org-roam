@@ -207,13 +207,13 @@ See `encode-time' for details."
 
 FILE-OR-DIR can either be the path to a file or a directory.
 Otherwise, use the file visited by the current buffer."
-  (let ((file-or-dir (-> (or file-or-dir
-                             (-> (buffer-base-buffer)
-                                 (buffer-file-name)))
-                         (file-name-directory)
-                         (expand-file-name)
-                         (file-truename))))
-    (directory-files-recursively file-or-dir "\.*")))
+  (let ((dir (-> (or file-or-dir
+                     (-> (buffer-base-buffer)
+                         (buffer-file-name)))
+                 (file-name-directory)
+                 (expand-file-name)
+                 (file-truename))))
+    (directory-files-recursively dir "\.*")))
 
 (defun org-roam-dailies--sort-files-by-date (&optional file-or-dir)
   "Sort files in FILE-OR-DIR by date.
@@ -237,7 +237,6 @@ buffer."
   (let* ((file (or file
                    (-> (buffer-base-buffer)
                        (buffer-file-name))))
-         (n (or n 1))
          (list (org-roam-dailies--sort-files-by-date file))
          (position
           (cl-position-if (lambda (candidate)
@@ -247,7 +246,7 @@ buffer."
       ((pred (natnump))
        (when (eq position (- (length list) 1))
          (user-error "Already at newest note")))
-      (_
+      ((pred (integerp))
        (when (eq position 0)
          (user-error "Already at oldest note"))))
     (nth (+ position n) list)))
@@ -258,15 +257,17 @@ buffer."
 With numeric argument N, find note N days in the future. If N is
 negative, find note N days in the past."
   (interactive "p")
-  (find-file (org-roam-dailies--find-next-note-path n)))
+  (let ((n (or n 1)))
+    (find-file (org-roam-dailies--find-next-note-path n))))
 
-(defun org-roam-dailies--find-previous-note (&optional n)
+(defun org-roam-dailies-find-previous-note (&optional n)
   "Find previous daily note.
 
 With numeric argument N, find note N days in the past. If N is
 negative, find note N days in the future."
   (interactive "p")
-  (org-roam-dailies-find-next-note (- n)))
+  (let ((n (if n (- n) -1)))
+    (org-roam-dailies-find-next-note n)))
 
 (provide 'org-roam-dailies)
 
