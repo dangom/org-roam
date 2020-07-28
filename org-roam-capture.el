@@ -481,7 +481,9 @@ This function is used solely in Org-roam's capture templates: see
                      (_ (error "Invalid org-roam-capture-context")))))
     (org-capture-put :template
                      (org-roam-capture--fill-template (org-capture-get :template)))
-    (org-roam-capture--put :file-path file-path)
+    (org-roam-capture--put :file-path file-path
+                           :finalize (or (org-capture-get :finalize)
+                                         (org-roam-capture--get :finalize)))
     (while org-roam-capture-additional-template-props
       (let ((prop (pop org-roam-capture-additional-template-props))
             (val (pop org-roam-capture-additional-template-props)))
