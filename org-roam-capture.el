@@ -437,7 +437,8 @@ the file if the original value of :no-save is not t and
          (save-window-excursion
            (find-file file-path)
            (insert (substring (org-capture-fill-template (concat roam-head "*"))
-                              0 -2)))
+                              0 -2))
+           (set-buffer-modified-p nil))
          (org-capture-put :template org-template))
         (_
          (org-capture-put :template
