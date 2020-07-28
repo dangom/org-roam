@@ -184,6 +184,53 @@ creating an entry."
   (interactive)
   (org-roam-dailies-capture-date t))
 
+;;----------------------------------------------------------------------------
+;; Navigation
+;;----------------------------------------------------------------------------
+(defun org-roam-dailies--file-to-date (&optional file)
+  "Get date from FILE or current-buffer.
+
+Return a cons whose  encoded timestamp."
+  (let ((file (or file
+                  (-> file
+                      (buffer-file-name))
+                  (buffer-base-buffer)
+                  (current-buffer))))
+    (list file
+          (-> file
+              (file-name-nondirectory)
+              (file-name-sans-extension)
+              (org-parse-time-string)
+              (encode-time)))))
+
+(defun org-roam-dailies--list-files (&optional directory)
+  "List all files in DIRECTORY or cwd."
+  (let ((directory (-> (or directory
+                           (-> (buffer-file-name)
+                               (file-name-directory)))
+                       (expand-file-name)
+                       (file-truename))))
+    (directory-files-recursively directory "\.*")))
+
+(defun org-roam-dailies--sort-files (&optional directory)
+  (let ((files (org-roam-dailies--list-files directory)))
+    (->> (mapcar #'org-roam-dailies--file-to-date files)
+         (seq-sort-by (lambda (data)
+                        (pcase-let ((`(,file ,time)))
+                          time))
+                      #'time-less-p)
+         (mapcar #'car))))
+
+(defun org-roam-dailies-previous-note ()
+  "Find previous note."
+  (let* ((current-date (-> (or (buffer-base-buffer)
+                               (current-buffer))
+                           (buffer-file-name)
+                           (file-name-nondirectory)
+                           (file-name-sans-extension)
+                           (parse-time-string))))
+    current-date))
+
 (provide 'org-roam-dailies)
 
 ;;; org-roam-dailies.el ends here
