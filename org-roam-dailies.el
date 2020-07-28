@@ -192,10 +192,8 @@ creating an entry."
 
 Return a cons whose  encoded timestamp."
   (let ((file (or file
-                  (-> file
-                      (buffer-file-name))
-                  (buffer-base-buffer)
-                  (current-buffer))))
+                  (-> (buffer-base-buffer)
+                      (buffer-file-name)))))
     (list file
           (-> file
               (file-name-nondirectory)
@@ -203,21 +201,24 @@ Return a cons whose  encoded timestamp."
               (org-parse-time-string)
               (encode-time)))))
 
-(defun org-roam-dailies--list-files (&optional directory)
-  "List all files in DIRECTORY or cwd."
-  (let ((directory (-> (or directory
-                           (-> (buffer-file-name)
-                               (file-name-directory)))
-                       (expand-file-name)
-                       (file-truename))))
-    (directory-files-recursively directory "\.*")))
+(defun org-roam-dailies--list-files (&optional file-or-dir)
+  "List all files in FILE-OR-DIR.
 
-(defun org-roam-dailies--sort-files (&optional directory)
+FILE-OR-DIR can either be the path to a file or a directory.
+Otherwise, use the file visited by the current buffer."
+  (let ((file-or-dir (-> (or file-or-dir
+                             (-> (buffer-base-buffer)
+                                 (buffer-file-name)))
+                         (file-name-directory)
+                         (expand-file-name)
+                         (file-truename))))
+    (directory-files-recursively file-or-dir "\.*")))
+
+(defun org-roam-dailies--sort-files-by-date (&optional directory)
+  "Sort files in DIRECTORY or cwd by date."
   (let ((files (org-roam-dailies--list-files directory)))
     (->> (mapcar #'org-roam-dailies--file-to-date files)
-         (seq-sort-by (lambda (data)
-                        (pcase-let ((`(,file ,time)))
-                          time))
+         (seq-sort-by #'cadr
                       #'time-less-p)
          (mapcar #'car))))
 
