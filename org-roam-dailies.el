@@ -277,18 +277,18 @@ negative, find note N days in the future."
 ;;----------------------------------------------------------------------------
 ;; Keybindings
 ;;----------------------------------------------------------------------------
-(defvar org-roam-dailies-keymap (make-sparse-keymap)
+(defvar org-roam-dailies-map (make-sparse-keymap)
   "Keymap for `org-roam-dailies'.")
 
-(define-prefix-command 'org-roam-dailies-keymap)
+(define-prefix-command 'org-roam-dailies-map)
 
-(define-key org-roam-dailies-keymap (kbd "d") #'org-roam-dailies-find-today)
-(define-key org-roam-dailies-keymap (kbd "y") #'org-roam-dailies-find-yesterday)
-(define-key org-roam-dailies-keymap (kbd "t") #'org-roam-dailies-find-tomorrow)
-(define-key org-roam-dailies-keymap (kbd "n") #'org-roam-dailies-capture-today)
-(define-key org-roam-dailies-keymap (kbd "r") #'org-roam-dailies-find-next-note)
-(define-key org-roam-dailies-keymap (kbd "l") #'org-roam-dailies-find-previous-note)
-(define-key org-roam-dailies-keymap (kbd "c") #'org-roam-dailies-find-date)
+(define-key org-roam-dailies-map (kbd "d") #'org-roam-dailies-find-today)
+(define-key org-roam-dailies-map (kbd "y") #'org-roam-dailies-find-yesterday)
+(define-key org-roam-dailies-map (kbd "t") #'org-roam-dailies-find-tomorrow)
+(define-key org-roam-dailies-map (kbd "n") #'org-roam-dailies-capture-today)
+(define-key org-roam-dailies-map (kbd "r") #'org-roam-dailies-find-next-note)
+(define-key org-roam-dailies-map (kbd "l") #'org-roam-dailies-find-previous-note)
+(define-key org-roam-dailies-map (kbd "c") #'org-roam-dailies-find-date)
 
 (provide 'org-roam-dailies)
 
