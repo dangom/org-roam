@@ -39,7 +39,9 @@
 (require 'org-roam-macs)
 
 (defcustom org-roam-dailies-capture--header-default "#+title: %<%Y-%m-%d>\n"
-  "Default header to use with `org-roam-dailies-capture-templates'.")
+  "Default header to use with `org-roam-dailies-capture-templates'."
+  :group 'org-roam
+  :type 'string)
 
 (defcustom org-roam-dailies-capture-templates
   '(("d" "daily" entry #'org-roam-capture--get-point
