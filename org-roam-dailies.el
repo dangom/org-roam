@@ -117,21 +117,26 @@ Template string   :\n%v")
 (declare-function org-roam--file-path-from-id "org-roam")
 (declare-function org-roam-mode               "org-roam")
 
+(defun org-roam-dailies-directory--get-absolute-path ()
+  "Get absolute path to `org-roam-dailies-directory'."
+  (-> (concat
+       (file-name-as-directory org-roam-directory)
+       org-roam-dailies-directory)
+      (file-truename)))
+
 (defun org-roam-dailies--daily-note-p (&optional file)
   "Return t if FILE is an Org-roam daily-note, nil otherwise.
 
 If FILE is not specified, use the current buffer's file-path."
-  (if-let ((path (or file
-                     (-> (buffer-base-buffer)
-                         (buffer-file-name))))
-           (directory (concat
-                       (file-name-as-directory org-roam-directory)
-                       org-roam-dailies-directory)))
-      (save-match-data
-        (and
-         (org-roam--org-file-p path)
-         (f-descendant-of-p (file-truename path)
-                            (file-truename directory))))))
+  (when-let ((path (or file
+                       (-> (buffer-base-buffer)
+                           (buffer-file-name))))
+             (directory (org-roam-dailies-directory--get-absolute-path)))
+    (setq path (file-truename path))
+    (save-match-data
+      (and
+       (org-roam--org-file-p path)
+       (f-descendant-of-p path directory)))))
 
 (defun org-roam-dailies--capture (time &optional goto)
   "Capture an entry in a daily note for TIME, creating it if necessary.
@@ -237,25 +242,17 @@ See `encode-time' for details."
               (org-parse-time-string)
               (encode-time)))))
 
-(defun org-roam-dailies--list-files (&optional file-or-dir)
-  "List all files in FILE-OR-DIR.
+(defun org-roam-dailies--list-files (&rest extra-files)
+  "List all files in `org-roam-dailies-directory'.
 
-FILE-OR-DIR can either be the path to a file or a directory.
-Otherwise, use the file visited by the current buffer."
-  (let ((dir (-> (or file-or-dir
-                     (-> (buffer-base-buffer)
-                         (buffer-file-name)))
-                 (file-name-directory)
-                 (expand-file-name)
-                 (file-truename))))
-    (directory-files-recursively dir "\.*")))
+EXTRA-FILES can be used to append extra files to the list."
+  (let ((dir (org-roam-dailies-directory--get-absolute-path)))
+    (append (directory-files-recursively dir "\.*")
+            extra-files)))
 
-(defun org-roam-dailies--sort-files-by-date (&optional file-or-dir)
-  "Sort files in FILE-OR-DIR by date.
-
-FILE-OR-DIR can either be the path to a file or a directory.
-Otherwise, use the file visited by the current buffer."
-  (let ((files (org-roam-dailies--list-files file-or-dir)))
+(defun org-roam-dailies--sort-files-by-date ()
+  "Sort files in `org-roam-dailies-directory' by date."
+  (let ((files (org-roam-dailies--list-files)))
     (->> (mapcar #'org-roam-dailies--file-to-date files)
          (seq-sort-by #'cadr
                       #'time-less-p)
@@ -274,8 +271,9 @@ buffer."
   (let ((file (or file
                   (-> (buffer-base-buffer)
                       (buffer-file-name)))))
+    ;; Ensure that the buffer is saved before moving
     (save-buffer file)
-    (let* ((list (org-roam-dailies--sort-files-by-date file))
+    (let* ((list (org-roam-dailies--sort-files-by-date))
            (position
             (cl-position-if (lambda (candidate)
                               (string= file candidate))
