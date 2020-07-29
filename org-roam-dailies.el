@@ -38,15 +38,25 @@
 (require 'org-roam-capture)
 (require 'org-roam-macs)
 
-(defcustom org-roam-dailies-capture--header-default "#+title: %<%Y-%m-%d>\n"
-  "Default header to use with `org-roam-dailies-capture-templates'."
+(defcustom org-roam-dailies-directory "daily/"
+  "Directory where daily-notes should live."
   :group 'org-roam
   :type 'string)
 
+(defvar org-roam-dailies-capture--file-name-default "%<%Y-%m-%d>"
+  "The default file-name for `org-roam-dailies-capture-templates'.
+
+Note that, contrary to `org-roam-capture-templates', the
+relativity is computed from `org-roam-dailies-directory'.")
+
+(defvar org-roam-dailies-capture--header-default "#+title: %<%Y-%m-%d>\n"
+  "The default header for `org-roam-dailies-capture-templates'.")
+
 (defcustom org-roam-dailies-capture-templates
-  '(("d" "daily" entry #'org-roam-capture--get-point
+  `(("d" "daily" entry #'org-roam-capture--get-point
      "* %?"
-     :file-name "%<%Y-%m-%d>"))
+     :file-name ,org-roam-dailies-capture--file-name-default
+     :header ,org-roam-dailies-capture--header-default))
   "Capture templates for daily-notes in Org-roam."
   :group 'org-roam
   ;; Adapted from `org-capture-templates'
