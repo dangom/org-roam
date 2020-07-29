@@ -104,7 +104,8 @@ Template string   :\n%v")
 
 When GOTO is non-nil, go the note without creating an entry."
   (unless org-roam-mode (org-roam-mode))
-  (let ((org-roam-capture-templates org-roam-dailies-capture-templates)
+  (let ((org-roam-capture-templates (--> org-roam-dailies-capture-templates
+                                         (if goto (list (car it)) it)))
         (org-roam-capture--info (list (cons 'time time)))
         (org-roam-capture--context 'dailies))
     (org-roam--with-template-error 'org-roam-dailies-capture-templates
