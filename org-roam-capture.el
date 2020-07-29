@@ -50,11 +50,11 @@
 (declare-function  org-roam-mode                        "org-roam")
 (declare-function  org-roam-completion--completing-read "org-roam-completion")
 
-(defvar org-roam-capture--file-name-default "%<%Y%m%d%H%M%S>"
-  "The default file name format for Org-roam templates.")
+(defvar org-roam-capture--file-name-default "%<%Y%m%d%H%M%S>-${slug}"
+  "The default file-name format for Org-roam templates.")
 
-(defvar org-roam-capture--header-default "#+title: ${title}\n#+roam_key: ${ref}\n"
-  "The default capture header for Org-roam templates.")
+(defvar org-roam-capture--header-default "#+title: ${title}\n"
+  "The default header for Org-roam templates.")
 
 (defvar org-roam-capture--file-path nil
   "The file path for the Org-roam capture.
@@ -85,10 +85,10 @@ note with the given `ref'.")
   "Keywords used in `org-roam-capture-templates' specific to Org-roam.")
 
 (defcustom org-roam-capture-templates
-  '(("d" "default" plain (function org-roam-capture--get-point)
+  `(("d" "default" plain (function org-roam-capture--get-point)
      "%?"
-     :file-name "%<%Y%m%d%H%M%S>-${slug}"
-     :head "#+title: ${title}\n"
+     :file-name ,org-roam-capture--file-name-default
+     :head ,org-roam-capture--header-default
      :unnarrowed t))
   "Capture templates for Org-roam.
 The Org-roam capture-templates  builds on the default behaviours of
@@ -224,10 +224,16 @@ Template string   :\n%v")
                  ((const :format "%v " :table-line-pos) (string))
                  ((const :format "%v " :kill-buffer) (const t))))))
 
+(defvar org-roam-capture-ref--file-name-default "${slug}"
+  "The default file-name for `org-roam-capture-ref-templates'.")
+
+(defvar org-roam-capture-ref--header-default "#+title: ${title}\n#+roam_key: ${ref}"
+  "The default header for `org-roam-capture-ref-templates'.")
+
 (defcustom org-roam-capture-ref-templates
   `(("r" "ref" plain (function org-roam-capture--get-point)
     "%?"
-    :file-name "${slug}"
+    :file-name ,org-roam-capture-ref--file-name-default
     :head ,org-roam-capture--header-default
     :unnarrowed t))
   "The Org-roam templates used during a capture from the roam-ref protocol.
