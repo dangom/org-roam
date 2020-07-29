@@ -271,22 +271,22 @@ If FILE is not provided, use the file visited by the current
 buffer."
   (unless (org-roam-dailies--daily-note-p file)
     (user-error "Not in a daily-note"))
-  (let* ((file (or file
-                   (-> (buffer-base-buffer)
-                       (buffer-file-name))))
-         (list (org-roam-dailies--sort-files-by-date file))
-         (position
-          (cl-position-if (lambda (candidate)
-                            (string= file candidate))
-                          list)))
-    (pcase n
-      ((pred (natnump))
-       (when (eq position (- (length list) 1))
-         (user-error "Already at newest note")))
-      ((pred (integerp))
-       (when (eq position 0)
-         (user-error "Already at oldest note"))))
-    (nth (+ position n) list)))
+  (let ((file (or file
+                  (-> (buffer-base-buffer)
+                      (buffer-file-name)))))
+    (save-buffer file)
+    (let* ((list (org-roam-dailies--sort-files-by-date file))
+           (position
+            (cl-position-if (lambda (candidate)
+                              (string= file candidate))
+                            list)))
+      (pcase n
+        ((pred (natnump))
+         (when (eq position (- (length list) 1))
+           (user-error "Already at newest note")))
+        ((pred (integerp))
+         (when (eq position 0)
+           (user-error "Already at oldest note")))))))
 
 (defun org-roam-dailies-find-next-note (&optional n)
   "Find next daily note.
