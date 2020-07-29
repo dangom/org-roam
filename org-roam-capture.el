@@ -41,6 +41,7 @@
 (defvar org-roam-directory)
 (defvar org-roam-mode)
 (defvar org-roam-title-to-slug-function)
+(defvar org-roam-dailies-capture--header-default)
 (declare-function  org-roam--get-title-path-completions "org-roam")
 (declare-function  org-roam--get-ref-path-completions   "org-roam")
 (declare-function  org-roam--file-path-from-id          "org-roam")
@@ -419,7 +420,11 @@ the file if the original value of :no-save is not t and
                           name-templ)))
          (file-path (org-roam--file-path-from-id new-id))
          (roam-head (or (org-roam-capture--get :head)
-                        org-roam-capture--header-default))
+                        (pcase org-roam-capture--context
+                          ('dailies
+                           org-roam-dailies-capture--header-default)
+                          (_
+                           org-roam-capture--header-default))))
          (org-template (org-capture-get :template))
          (roam-template (concat roam-head org-template)))
     (unless (or (file-exists-p file-path)
