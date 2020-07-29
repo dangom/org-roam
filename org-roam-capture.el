@@ -532,7 +532,7 @@ This function is used solely in Org-roam's capture templates: see
     (set-buffer (org-capture-target-buffer file-path))
     (widen)
     (if-let ((olp (when (eq context 'dailies)
-                    (org-capture-get :olp))))
+                    (org-roam-capture--get :olp))))
         (condition-case err
             (when-let ((marker (org-find-olp (list file-path olp))))
               (goto-char marker)
