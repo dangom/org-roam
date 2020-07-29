@@ -52,7 +52,7 @@
 (defvar org-roam-capture--file-name-default "%<%Y%m%d%H%M%S>"
   "The default file name format for Org-roam templates.")
 
-(defvar org-roam-capture--header-default "#+title: ${title}\n"
+(defvar org-roam-capture--header-default "#+title: ${title}\n#+roam_key: ${ref}\n"
   "The default capture header for Org-roam templates.")
 
 (defvar org-roam-capture--file-path nil
@@ -224,11 +224,11 @@ Template string   :\n%v")
                  ((const :format "%v " :kill-buffer) (const t))))))
 
 (defcustom org-roam-capture-ref-templates
-  '(("r" "ref" plain (function org-roam-capture--get-point)
-     "%?"
-     :file-name "${slug}"
-     :head "#+title: ${title}\n#+roam_key: ${ref}\n"
-     :unnarrowed t))
+  `(("r" "ref" plain (function org-roam-capture--get-point)
+    "%?"
+    :file-name "${slug}"
+    :head ,org-roam-capture--header-default
+    :unnarrowed t))
   "The Org-roam templates used during a capture from the roam-ref protocol.
 Details on how to specify for the template is given in `org-roam-capture-templates'."
   :group 'org-roam
