@@ -113,6 +113,22 @@ Template string   :\n%v")
 (declare-function org-roam--file-path-from-id "org-roam")
 (declare-function org-roam-mode               "org-roam")
 
+(defun org-roam-dailies--daily-note-p (&optional file)
+  "Return t if FILE is an Org-roam daily-note, nil otherwise.
+
+If FILE is not specified, use the current buffer's file-path."
+  (if-let ((path (or file
+                     (-> (buffer-base-buffer)
+                         (buffer-file-name))))
+           (directory (concat
+                       (file-name-as-directory org-roam-directory)
+                       org-roam-dailies-directory)))
+      (save-match-data
+        (and
+         (org-roam--org-file-p path)
+         (f-descendant-of-p (file-truename path)
+                            (file-truename directory))))))
+
 (defun org-roam-dailies--capture (time &optional goto)
   "Capture an entry in a daily note for TIME, creating it if necessary.
 
@@ -249,6 +265,8 @@ negative, find note N days in the past.
 
 If FILE is not provided, use the file visited by the current
 buffer."
+  (unless (org-roam-dailies--daily-note-p file)
+    (user-error "Not in a daily-note"))
   (let* ((file (or file
                    (-> (buffer-base-buffer)
                        (buffer-file-name))))
