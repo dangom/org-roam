@@ -274,6 +274,22 @@ negative, find note N days in the future."
   (let ((n (if n (- n) -1)))
     (org-roam-dailies-find-next-note n)))
 
+;;----------------------------------------------------------------------------
+;; Keybindings
+;;----------------------------------------------------------------------------
+(defvar org-roam-dailies-keymap (make-sparse-keymap)
+  "Keymap for `org-roam-dailies'.")
+
+(define-prefix-command 'org-roam-dailies-keymap)
+
+(define-key org-roam-dailies-keymap (kbd "d") #'org-roam-dailies-find-today)
+(define-key org-roam-dailies-keymap (kbd "y") #'org-roam-dailies-find-yesterday)
+(define-key org-roam-dailies-keymap (kbd "t") #'org-roam-dailies-find-tomorrow)
+(define-key org-roam-dailies-keymap (kbd "n") #'org-roam-dailies-capture-today)
+(define-key org-roam-dailies-keymap (kbd "r") #'org-roam-dailies-find-next-note)
+(define-key org-roam-dailies-keymap (kbd "l") #'org-roam-dailies-find-previous-note)
+(define-key org-roam-dailies-keymap (kbd "c") #'org-roam-dailies-find-date)
+
 (provide 'org-roam-dailies)
 
 ;;; org-roam-dailies.el ends here
