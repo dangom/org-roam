@@ -468,22 +468,23 @@ If there is no file with that ref, a file with that ref is created.
 
 This function is used solely in Org-roam's capture templates: see
 `org-roam-capture-templates'."
-  (let ((file-path (pcase org-roam-capture--context
-                     ('capture
-                      (or (cdr (assoc 'file org-roam-capture--info))
-                          (org-roam-capture--new-file)))
-                     ('title
-                      (org-roam-capture--new-file))
-                     ('dailies
-                      (org-capture-put :default-time (cdr (assoc 'time org-roam-capture--info)))
-                      (org-roam-capture--new-file))
-                     ('ref
-                      (let ((completions (org-roam--get-ref-path-completions))
-                            (ref (cdr (assoc 'ref org-roam-capture--info))))
-                        (if-let ((pl (cdr (assoc ref completions))))
-                            (plist-get pl :path)
-                          (org-roam-capture--new-file))))
-                     (_ (error "Invalid org-roam-capture-context")))))
+  (let* ((context org-roam-capture--context)
+         (file-path (pcase context
+                      ('capture
+                       (or (cdr (assoc 'file org-roam-capture--info))
+                           (org-roam-capture--new-file)))
+                      ('title
+                       (org-roam-capture--new-file))
+                      ('dailies
+                       (org-capture-put :default-time (cdr (assoc 'time org-roam-capture--info)))
+                       (org-roam-capture--new-file))
+                      ('ref
+                       (let ((completions (org-roam--get-ref-path-completions))
+                             (ref (cdr (assoc 'ref org-roam-capture--info))))
+                         (if-let ((pl (cdr (assoc ref completions))))
+                             (plist-get pl :path)
+                           (org-roam-capture--new-file))))
+                      (_ (error "Invalid org-roam-capture-context")))))
     (org-capture-put :template
                      (org-roam-capture--fill-template (org-capture-get :template)))
     (org-roam-capture--put :file-path file-path
@@ -495,7 +496,17 @@ This function is used solely in Org-roam's capture templates: see
         (org-roam-capture--put prop val)))
     (set-buffer (org-capture-target-buffer file-path))
     (widen)
-    (goto-char (point-max))))
+    (if-let ((olp (when (eq context 'dailies)
+                    (org-capture-get :olp))))
+        (condition-case err
+            (when-let ((marker (org-find-olp (list file-path olp))))
+              (goto-char marker)
+              (set-marker marker nil))
+          (error
+           (when (org-roam-capture--get :new-file)
+             (kill-buffer))
+           (signal (car err) (cdr err))))
+      (goto-char (point-min)))))
 
 (defun org-roam-capture--convert-template (template)
   "Convert TEMPLATE from Org-roam syntax to `org-capture-templates' syntax."
