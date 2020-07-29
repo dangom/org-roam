@@ -41,7 +41,9 @@
 (defvar org-roam-directory)
 (defvar org-roam-mode)
 (defvar org-roam-title-to-slug-function)
+(defvar org-roam-dailies-capture--file-name-default)
 (defvar org-roam-dailies-capture--header-default)
+(defvar org-roam-dailies-directory)
 (declare-function  org-roam--get-title-path-completions "org-roam")
 (declare-function  org-roam--get-ref-path-completions   "org-roam")
 (declare-function  org-roam--file-path-from-id          "org-roam")
@@ -399,6 +401,18 @@ The file is saved if the original value of :no-save is not t and
     (with-current-buffer (org-capture-get :buffer)
       (save-buffer)))))
 
+(defun org-roam-capture--expand-file-name (file-name)
+  "Expand FILE-NAME for `org-roam-capture'.
+
+Prepend `org-roam-dailies-directory' to the value of `:file' when
+capturing a daily-note."
+  (when file-name
+    (pcase org-roam-capture--context
+      ('dailies
+       (concat org-roam-dailies-directory file-name))
+      (_
+       file-name))))
+
 (defun org-roam-capture--new-file ()
   "Return the path to the new file during an Org-roam capture.
 
@@ -420,8 +434,16 @@ aborted, we do the following:
 3. Add a function on `org-capture-before-finalize-hook' that saves
 the file if the original value of :no-save is not t and
 `org-note-abort' is not t."
-  (let* ((name-templ (or (org-roam-capture--get :file-name)
-                         org-roam-capture--file-name-default))
+  (let* ((name-templ (-> (or (org-roam-capture--get :file-name)
+                             (pcase org-roam-capture--context
+                               ('dailies
+                                org-roam-dailies-capture--file-name-default)
+                               ('ref
+                                org-roam-capture-ref--file-name-default)
+                               (_
+                                org-roam-capture--file-name-default)))
+                         ;; Expand file-name for daily-notes
+                         (org-roam-capture--expand-file-name)))
          (new-id (s-trim (org-roam-capture--fill-template
                           name-templ)))
          (file-path (org-roam--file-path-from-id new-id))
@@ -429,6 +451,8 @@ the file if the original value of :no-save is not t and
                         (pcase org-roam-capture--context
                           ('dailies
                            org-roam-dailies-capture--header-default)
+                          ('ref
+                           org-roam-capture-ref--header-default)
                           (_
                            org-roam-capture--header-default))))
          (org-template (org-capture-get :template))
