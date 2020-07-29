@@ -165,7 +165,8 @@ When GOTO is non-nil, go the note without creating an entry."
   (interactive "P")
   (org-roam-dailies--capture (current-time) goto)
   (when goto
-    (run-hooks 'org-roam-dailies-find-file-hook)))
+    (run-hooks 'org-roam-dailies-find-file-hook)
+    (message "Showing daily-note for today")))
 
 (defun org-roam-dailies-find-today ()
   "Find the daily note for today, creating it if necessary."
@@ -275,7 +276,8 @@ If FILE is not provided, use the file visited by the current
 buffer."
   (unless (org-roam-dailies--daily-note-p file)
     (user-error "Not in a daily-note"))
-  (let ((file (or file
+  (let ((n (or n 1))
+        (file (or file
                   (-> (buffer-base-buffer)
                       (buffer-file-name)))))
     ;; Ensure that the buffer is saved before moving
@@ -295,7 +297,7 @@ buffer."
       (nth (+ position n) list))))
 
 (defun org-roam-dailies-find-next-note (&optional n)
-  "Find next daily note.
+  "Find next daily-note.
 
 With numeric argument N, find note N days in the future. If N is
 negative, find note N days in the past."

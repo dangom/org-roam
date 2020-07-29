@@ -503,8 +503,7 @@ If there is no file with that ref, a file with that ref is created.
 
 This function is used solely in Org-roam's capture templates: see
 `org-roam-capture-templates'."
-  (let* ((context org-roam-capture--context)
-         (file-path (pcase context
+  (let* ((file-path (pcase org-roam-capture--context
                       ('capture
                        (or (cdr (assoc 'file org-roam-capture--info))
                            (org-roam-capture--new-file)))
@@ -531,10 +530,19 @@ This function is used solely in Org-roam's capture templates: see
         (org-roam-capture--put prop val)))
     (set-buffer (org-capture-target-buffer file-path))
     (widen)
-    (if-let ((olp (when (eq context 'dailies)
-                    (org-roam-capture--get :olp))))
+    (if-let* ((olp (when (eq org-roam-capture--context 'dailies)
+                     (--> (org-roam-capture--get :olp)
+                          (pcase it
+                            ((pred stringp)
+                             (list it))
+                            ((pred listp)
+                             it)
+                            (wrong-type
+                             (signal 'wrong-type-argument
+                                     `((stringp listp)
+                                       ,wrong-type))))))))
         (condition-case err
-            (when-let ((marker (org-find-olp (list file-path olp))))
+            (when-let ((marker (org-find-olp `(,file-path ,@olp))))
               (goto-char marker)
               (set-marker marker nil))
           (error
