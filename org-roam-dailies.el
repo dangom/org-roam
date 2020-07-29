@@ -37,11 +37,7 @@
 (require 'org-capture)
 (require 'org-roam-capture)
 (require 'org-roam-macs)
-
-(defcustom org-roam-dailies-directory "daily/"
-  "Directory where daily-notes should live."
-  :group 'org-roam
-  :type 'string)
+(require 'f)
 
 (defvar org-roam-dailies-capture--file-name-default "%<%Y-%m-%d>"
   "The default file-name for `org-roam-dailies-capture-templates'.
@@ -51,6 +47,12 @@ relativity is computed from `org-roam-dailies-directory'.")
 
 (defvar org-roam-dailies-capture--header-default "#+title: %<%Y-%m-%d>\n"
   "The default header for `org-roam-dailies-capture-templates'.")
+
+;;; Customizable variables
+(defcustom org-roam-dailies-directory "daily/"
+  "Directory where daily-notes should live."
+  :group 'org-roam
+  :type 'string)
 
 (defcustom org-roam-dailies-capture-templates
   `(("d" "daily" entry #'org-roam-capture--get-point
@@ -110,6 +112,8 @@ Template string   :\n%v")
 
 ;; Declarations
 (defvar org-roam-mode)
+(defvar org-roam-directory)
+(declare-function org-roam--org-file-p        "org-roam")
 (declare-function org-roam--file-path-from-id "org-roam")
 (declare-function org-roam-mode               "org-roam")
 
