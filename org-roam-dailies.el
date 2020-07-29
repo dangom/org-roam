@@ -54,6 +54,11 @@ relativity is computed from `org-roam-dailies-directory'.")
   :group 'org-roam
   :type 'string)
 
+(defcustom org-roam-dailies-find-file-hook nil
+  "Hook that is run right after navigating to a daily-note."
+  :group 'org-roam
+  :type 'hook)
+
 (defcustom org-roam-dailies-capture-templates
   `(("d" "daily" entry #'org-roam-capture--get-point
      "* %?"
@@ -158,7 +163,9 @@ When GOTO is non-nil, go the note without creating an entry."
 
 When GOTO is non-nil, go the note without creating an entry."
   (interactive "P")
-  (org-roam-dailies--capture (current-time) goto))
+  (org-roam-dailies--capture (current-time) goto)
+  (when goto
+    (run-hooks 'org-roam-dailies-find-file-hook)))
 
 (defun org-roam-dailies-find-today ()
   "Find the daily note for today, creating it if necessary."
@@ -294,7 +301,8 @@ With numeric argument N, find note N days in the future. If N is
 negative, find note N days in the past."
   (interactive "p")
   (let ((n (or n 1)))
-    (find-file (org-roam-dailies--find-next-note-path n))))
+    (find-file (org-roam-dailies--find-next-note-path n))
+    (run-hooks 'org-roam-dailies-find-file-hook)))
 
 (defun org-roam-dailies-find-previous-note (&optional n)
   "Find previous daily note.
