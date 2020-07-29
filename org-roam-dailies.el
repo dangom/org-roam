@@ -286,7 +286,8 @@ buffer."
            (user-error "Already at newest note")))
         ((pred (integerp))
          (when (eq position 0)
-           (user-error "Already at oldest note")))))))
+           (user-error "Already at oldest note"))))
+      (nth (+ position n) list))))
 
 (defun org-roam-dailies-find-next-note (&optional n)
   "Find next daily note.
