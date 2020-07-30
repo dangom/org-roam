@@ -133,6 +133,11 @@ Template string   :\n%v")
        org-roam-dailies-directory)
       (file-truename)))
 
+(defun org-roam-dailies-find-directory ()
+  "Find and open `org-roam-dailies-directory'."
+  (interactive)
+  (org-roam--find-file (org-roam-dailies-directory--get-absolute-path)))
+
 (defun org-roam-dailies--daily-note-p (&optional file)
   "Return t if FILE is an Org-roam daily-note, nil otherwise.
 
@@ -360,6 +365,7 @@ negative, find note N days in the future."
 (define-key org-roam-dailies-map (kbd "b") #'org-roam-dailies-find-previous-note)
 (define-key org-roam-dailies-map (kbd "c") #'org-roam-dailies-find-date)
 (define-key org-roam-dailies-map (kbd "v") #'org-roam-dailies-capture-date)
+(define-key org-roam-dailies-map (kbd ".") #'org-roam-dailies-find-directory)
 
 (provide 'org-roam-dailies)
 
