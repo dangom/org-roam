@@ -359,6 +359,7 @@ negative, find note N days in the future."
 (define-key org-roam-dailies-map (kbd "f") #'org-roam-dailies-find-next-note)
 (define-key org-roam-dailies-map (kbd "b") #'org-roam-dailies-find-previous-note)
 (define-key org-roam-dailies-map (kbd "c") #'org-roam-dailies-find-date)
+(define-key org-roam-dailies-map (kbd "v") #'org-roam-dailies-capture-date)
 
 (provide 'org-roam-dailies)
 
