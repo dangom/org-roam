@@ -121,6 +121,11 @@ Template string   :\n%v")
 (declare-function org-roam--file-path-from-id "org-roam")
 (declare-function org-roam-mode               "org-roam")
 
+(defface org-roam-dailies-calendar-note
+  '((t :inherit (org-roam-link)))
+  "Face for dates with a daily-note in the calendar"
+  :group 'org-roam-faces)
+
 (defun org-roam-dailies-directory--get-absolute-path ()
   "Get absolute path to `org-roam-dailies-directory'."
   (-> (concat
@@ -253,7 +258,7 @@ Return (MONTH DAY YEAR)."
     (dolist (date (mapcar #'org-roam-dailies-calendar--file-to-date
                           (org-roam-dailies--list-files)))
       (when (calendar-date-is-visible-p date)
-        (calendar-mark-visible-date date 'org-roam-link)))))
+        (calendar-mark-visible-date date 'org-roam-dailies-calendar-note)))))
 
 ;;----------------------------------------------------------------------------
 ;; Date
