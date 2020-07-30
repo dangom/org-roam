@@ -54,6 +54,8 @@
 ;; @TODO: implement something akin to `org-modules' that allows
 ;; selectively loading different sets of features.
 ;; ~NV [2020-05-22 Fri]
+
+(require 'org-roam-faces)
 (require 'org-roam-buffer)
 (require 'org-roam-completion)
 (require 'org-roam-capture)
@@ -77,11 +79,6 @@
   :prefix "org-roam-"
   :link '(url-link :tag "Github" "https://github.com/org-roam/org-roam")
   :link '(url-link :tag "Online Manual" "https://www.orgroam.com/manual/"))
-
-(defgroup org-roam-faces nil
-  "Faces used by Org-roam."
-  :group 'org-roam
-  :group 'faces)
 
 (defcustom org-roam-directory (expand-file-name "~/org-roam/")
   "Default path to Org-roam files.
@@ -943,32 +940,7 @@ Return nil if the file does not exist."
         file)
       org-roam-directory))))
 
-;;; The org-roam buffer
-;;;; org-roam-link-face
-(defface org-roam-link
-  '((t :inherit org-link))
-  "Face for Org-roam links."
-  :group 'org-roam-faces)
-
-(defface org-roam-link-current
-  '((t :inherit org-link))
-  "Face for Org-roam links pointing to the current buffer."
-  :group 'org-roam-faces)
-
-(defface org-roam-link-invalid
-  '((t :inherit (error org-link)))
-  "Face for Org-roam links that are not valid.
-This face is used for links without a destination."
-  :group 'org-roam-faces)
-
-(defface org-roam-link-shielded
-  '((t :inherit (warning org-link)))
-  "Face for Org-roam links that are shielded.
-This face is used on the region target by `org-roam-insertion'
-during an `org-roam-capture'."
-  :group 'org-roam-faces)
-
-;;;; org-roam-backlinks-mode
+;;; org-roam-backlinks-mode
 (define-minor-mode org-roam-backlinks-mode
   "Minor mode for the `org-roam-buffer'.
 \\{org-roam-backlinks-mode-map}"
@@ -1007,39 +979,6 @@ buffer or a marker."
         (backlink-dest (org-roam--retrieve-link-destination)))
     (string= current backlink-dest)))
 
-(defun org-roam--roam-file-link-face (path)
-  "Conditional face for org file links.
-Applies `org-roam-link-current' if PATH corresponds to the
-currently opened Org-roam file in the backlink buffer, or
-`org-roam-link-face' if PATH corresponds to any other Org-roam
-file."
-  (cond ((and (not (file-remote-p path)) ;; Prevent lockups opening Tramp links
-              (not (file-exists-p path)))
-         'org-roam-link-invalid)
-        ((and (org-roam--in-buffer-p)
-              (org-roam--backlink-to-current-p))
-         'org-roam-link-current)
-        ((org-roam--org-roam-file-p path)
-         'org-roam-link)
-        (t
-         'org-link)))
-
-(defun org-roam--roam-id-link-face (id)
-  "Conditional face for org ID links.
-Applies `org-roam-link-current' if ID corresponds to the
-currently opened Org-roam file in the backlink buffer, or
-`org-roam-link-face' if ID corresponds to any other Org-roam
-file."
-  (cond ((not (org-roam-id-find id))
-         'org-roam-link-invalid)
-        ((and (org-roam--in-buffer-p)
-              (org-roam--backlink-to-current-p))
-         'org-roam-link-current)
-        ((org-roam-id-find id t)
-         'org-roam-link)
-        (t
-         'org-link)))
-
 (defun org-roam-open-at-point ()
   "Open an Org-roam link or visit the text previewed at point.
 When point is on an Org-roam link, open the link in the Org-roam window.
@@ -1077,13 +1016,15 @@ for Org-ref cite links."
                      target))
 
 (defun org-roam-store-link-file ()
-  "Store a link to an `org-roam' file."
-  (when (org-before-first-heading-p)
-    (when-let ((title (cdr (assoc "TITLE" (org-roam--extract-global-props '("TITLE"))))))
+  "Store a link to an Org-roam file."
+  (when (and (bound-and-true-p org-roam-mode)
+             (org-roam--org-roam-file-p)
+             (org-before-first-heading-p))
+    (when-let ((titles (org-roam--extract-titles)))
       (org-link-store-props
        :type        "file"
        :link        (format "file:%s" (abbreviate-file-name buffer-file-name))
-       :description title))))
+       :description (car titles)))))
 
 (defun org-roam--store-link (arg &optional interactive?)
   "Store a link to the current location within Org-roam.
@@ -1157,15 +1098,50 @@ This function hooks into `org-open-at-point' via
             (t
              nil)))))
 
-;;; The global minor org-roam-mode
+;;; Org-roam-mode
+;;;; Function Faces
+;; These faces are used by `org-link-set-parameters', which take one argument,
+;; which is the path.
+(defun org-roam--file-link-face (path)
+  "Conditional face for file: links.
+Applies `org-roam-link-current' if PATH corresponds to the
+currently opened Org-roam file in the backlink buffer, or
+`org-roam-link-face' if PATH corresponds to any other Org-roam
+file."
+  (cond ((and (not (file-remote-p path)) ;; Prevent lockups opening Tramp links
+              (not (file-exists-p path)))
+         'org-roam-link-invalid)
+        ((and (org-roam--in-buffer-p)
+              (org-roam--backlink-to-current-p))
+         'org-roam-link-current)
+        ((org-roam--org-roam-file-p path)
+         'org-roam-link)
+        (t
+         'org-link)))
+
+(defun org-roam--id-link-face (id)
+  "Conditional face for id links.
+Applies `org-roam-link-current' if ID corresponds to the
+currently opened Org-roam file in the backlink buffer, or
+`org-roam-link-face' if ID corresponds to any other Org-roam
+file."
+  (cond ((not (org-roam-id-find id))
+         'org-roam-link-invalid)
+        ((and (org-roam--in-buffer-p)
+              (org-roam--backlink-to-current-p))
+         'org-roam-link-current)
+        ((org-roam-id-find id t)
+         'org-roam-link)
+        (t
+         'org-link)))
+
+;;;; Hooks and Advices
 (defun org-roam--find-file-hook-function ()
   "Called by `find-file-hook' when mode symbol `org-roam-mode' is on."
   (when (org-roam--org-roam-file-p)
     (setq org-roam-last-window (get-buffer-window))
     (add-hook 'post-command-hook #'org-roam-buffer--update-maybe nil t)
     (add-hook 'after-save-hook #'org-roam-db--update-file nil t)
-    (org-link-set-parameters "file" :face 'org-roam--roam-file-link-face :store #'org-roam-store-link-file)
-    (org-link-set-parameters "id" :face 'org-roam--roam-id-link-face)
     (org-roam-buffer--update-maybe :redisplay t)))
 
 (defun org-roam--delete-file-advice (file &optional _trash)
@@ -1319,6 +1295,9 @@ M-x info for more information at Org-roam > Installation > Post-Installation Tas
     (add-hook 'org-open-at-point-functions #'org-roam-open-id-at-point)
     (advice-add 'rename-file :after #'org-roam--rename-file-advice)
     (advice-add 'delete-file :before #'org-roam--delete-file-advice)
+    (when (fboundp 'org-link-set-parameters)
+      (org-link-set-parameters "file" :face 'org-roam--file-link-face :store #'org-roam-store-link-file)
+      (org-link-set-parameters "id" :face 'org-roam---id-link-face))
     (org-roam-db-build-cache))
    (t
     (setq org-execute-file-search-functions (delete 'org-roam--execute-file-row-col org-execute-file-search-functions))
@@ -1327,11 +1306,13 @@ M-x info for more information at Org-roam > Installation > Post-Installation Tas
     (remove-hook 'org-open-at-point-functions #'org-roam-open-id-at-point)
     (advice-remove 'rename-file #'org-roam--rename-file-advice)
     (advice-remove 'delete-file #'org-roam--delete-file-advice)
+    (when (fboundp 'org-link-set-parameters)
+      (dolist (face '("file" "id"))
+        (org-link-set-parameters face :face 'org-link)))
     (org-roam-db--close-all)
     ;; Disable local hooks for all org-roam buffers
     (dolist (buf (org-roam--get-roam-buffers))
       (with-current-buffer buf
-        (org-link-set-parameters "file" :face 'org-link)
         (remove-hook 'post-command-hook #'org-roam-buffer--update-maybe t)
         (remove-hook 'after-save-hook #'org-roam-db--update-file t))))))
 
