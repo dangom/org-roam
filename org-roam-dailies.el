@@ -289,11 +289,13 @@ buffer."
                             list)))
       (pcase n
         ((pred (natnump))
-         (when (eq position (- (length list) 1))
-           (user-error "Already at newest note")))
+         (if (eq position (- (length list) 1))
+             (user-error "Already at newest note")
+           (message "Showing next daily-note")))
         ((pred (integerp))
-         (when (eq position 0)
-           (user-error "Already at oldest note"))))
+         (if (eq position 0)
+             (user-error "Already at oldest note")
+           (message "Showing previous daily-note"))))
       (nth (+ position n) list))))
 
 (defun org-roam-dailies-find-next-note (&optional n)
