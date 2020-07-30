@@ -257,14 +257,6 @@ EXTRA-FILES can be used to append extra files to the list."
     (append (directory-files-recursively dir "\.*")
             extra-files)))
 
-(defun org-roam-dailies--sort-files-by-date ()
-  "Sort files in `org-roam-dailies-directory' by date."
-  (let ((files (org-roam-dailies--list-files)))
-    (->> (mapcar #'org-roam-dailies--file-to-date files)
-         (seq-sort-by #'cadr
-                      #'time-less-p)
-         (mapcar #'car))))
-
 (defun org-roam-dailies--find-next-note-path (&optional n file)
   "Find next daily note from FILE.
 
@@ -281,7 +273,7 @@ buffer."
                       (buffer-file-name)))))
     ;; Ensure that the buffer is saved before moving
     (save-buffer file)
-    (let* ((list (org-roam-dailies--sort-files-by-date))
+    (let* ((list (org-roam-dailies--list-files))
            (position
             (cl-position-if (lambda (candidate)
                               (string= file candidate))
