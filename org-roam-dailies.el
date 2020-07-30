@@ -212,6 +212,50 @@ With numeric argument N, use N days in the future."
   (org-roam-dailies-capture-tomorrow (- n) t))
 
 ;;----------------------------------------------------------------------------
+;; Calendar
+;;----------------------------------------------------------------------------
+(defvar org-roam-dailies-calendar-hook (list 'org-roam-dailies-calendar-mark-entries)
+  "Hooks to run when showing the `org-roam-dailies-calendar'.")
+
+(defun org-roam-dailies-calendar--install-hook ()
+  "Install Org-roam-dailies hooks to calendar."
+  (add-hook 'calendar-today-visible-hook #'org-roam-dailies-calendar--run-hook)
+  (add-hook 'calendar-today-invisible-hook #'org-roam-dailies-calendar--run-hook))
+
+(defun org-roam-dailies-calendar--run-hook ()
+  "Run Org-roam-dailies hooks to calendar."
+  (run-hooks 'org-roam-dailies-calendar-hook)
+  (remove-hook 'calendar-today-visible-hook #'org-roam-dailies-calendar--run-hook)
+  (remove-hook 'calendar-today-invisible-hook #'org-roam-dailies-calendar--run-hook))
+
+(defun org-roam-dailies-calendar--file-to-date (&optional file)
+  "Convert FILE to date.
+
+Return (MONTH DAY YEAR)."
+  (let ((file (or file
+                  (-> (buffer-base-buffer)
+                      (buffer-file-name)))))
+    (cl-destructuring-bind (_ _ _ d m y _ _ _)
+        (-> file
+            (file-name-nondirectory)
+            (file-name-sans-extension)
+            (org-parse-time-string))
+      (list m d y))))
+
+(defun org-roam-dailies-calendar--date-to-time (date)
+  "Convert DATE as returned from the calendar (MONTH DAY YEAR) to a time."
+  (encode-time 0 0 0 (nth 1 date) (nth 0 date) (nth 2 date)))
+
+(defun org-roam-dailies-calendar-mark-entries ()
+  "Mark days in the calendar for which a daily-note is present."
+  (interactive)
+  (when (file-exists-p (org-roam-dailies-directory--get-absolute-path))
+    (dolist (date (mapcar #'org-roam-dailies-calendar--file-to-date
+                          (org-roam-dailies--list-files)))
+      (when (calendar-date-is-visible-p date)
+        (calendar-mark-visible-date date 'org-roam-link)))))
+
+;;----------------------------------------------------------------------------
 ;; Date
 ;;----------------------------------------------------------------------------
 (defun org-roam-dailies-capture-date (&optional goto prefer-future)
@@ -222,6 +266,7 @@ Prefer past dates, unless PREFER-FUTURE is non-nil.
 With a `C-u' prefix or when GOTO is non-nil, go the note without
 creating an entry."
   (interactive "P")
+  (org-roam-dailies-calendar--install-hook)
   (let ((time (let ((org-read-date-prefer-future prefer-future))
                 (org-read-date nil t nil "Date: "))))
     (org-roam-dailies--capture time goto)))
@@ -234,21 +279,6 @@ creating an entry."
 ;;----------------------------------------------------------------------------
 ;; Navigation
 ;;----------------------------------------------------------------------------
-(defun org-roam-dailies--file-to-date (&optional file)
-  "Get date from FILE or current buffer.
-
-Return a cons of the format (file . time) where 'time is encoded.
-See `encode-time' for details."
-  (let ((file (or file
-                  (-> (buffer-base-buffer)
-                      (buffer-file-name)))))
-    (list file
-          (-> file
-              (file-name-nondirectory)
-              (file-name-sans-extension)
-              (org-parse-time-string)
-              (encode-time)))))
-
 (defun org-roam-dailies--list-files (&rest extra-files)
   "List all files in `org-roam-dailies-directory'.
 
