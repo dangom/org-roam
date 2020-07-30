@@ -83,7 +83,7 @@ note with the given `ref'.")
 (defvar org-roam-capture-additional-template-props nil
   "Additional props to be added to the Org-roam template.")
 
-(defconst org-roam-capture--template-keywords '(:file-name :head :olp)
+(defconst org-roam-capture--template-keywords '(:file-name :dir-name :head :olp)
   "Keywords used in `org-roam-capture-templates' specific to Org-roam.")
 
 (defcustom org-roam-capture-templates
@@ -434,16 +434,18 @@ aborted, we do the following:
 3. Add a function on `org-capture-before-finalize-hook' that saves
 the file if the original value of :no-save is not t and
 `org-note-abort' is not t."
-  (let* ((name-templ (-> (or (org-roam-capture--get :file-name)
-                             (pcase org-roam-capture--context
-                               ('dailies
-                                org-roam-dailies-capture--file-name-default)
-                               ('ref
-                                org-roam-capture-ref--file-name-default)
-                               (_
-                                org-roam-capture--file-name-default)))
-                         ;; Expand file-name for daily-notes
-                         (org-roam-capture--expand-file-name)))
+  (let* ((name-templ (or (org-roam-capture--get :file-name)
+                         (pcase org-roam-capture--context
+                           ('dailies
+                            (or (-some-> (or (org-roam-capture--get :dir-name)
+                                             org-roam-dailies-directory)
+                                  (file-name-as-directory)
+                                  (concat org-roam-dailies-capture--file-name-default))
+                                (user-error "`org-roam-dailies-directory' cannot be nil")))
+                           ('ref
+                            org-roam-capture-ref--file-name-default)
+                           (_
+                            org-roam-capture--file-name-default))))
          (new-id (s-trim (org-roam-capture--fill-template
                           name-templ)))
          (file-path (org-roam--file-path-from-id new-id))

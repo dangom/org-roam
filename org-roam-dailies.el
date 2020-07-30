@@ -62,7 +62,6 @@ relativity is computed from `org-roam-dailies-directory'.")
 (defcustom org-roam-dailies-capture-templates
   `(("d" "daily" entry #'org-roam-capture--get-point
      "* %?"
-     :file-name ,org-roam-dailies-capture--file-name-default
      :header ,org-roam-dailies-capture--header-default))
   "Capture templates for daily-notes in Org-roam."
   :group 'org-roam
