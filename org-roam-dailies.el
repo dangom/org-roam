@@ -302,9 +302,9 @@ buffer."
 With numeric argument N, find note N days in the future. If N is
 negative, find note N days in the past."
   (interactive "p")
-  (let ((n (or n 1)))
-    (let ((next (org-roam-dailies--find-next-note-path n)))
-      (find-file next))
+  (let ((n (or n 1))
+        (next (org-roam-dailies--find-next-note-path n)))
+    (find-file next)
     (run-hooks 'org-roam-dailies-find-file-hook)))
 
 (defun org-roam-dailies-find-previous-note (&optional n)
