@@ -40,10 +40,7 @@
 (require 'f)
 
 (defvar org-roam-dailies-capture--file-name-default "%<%Y-%m-%d>"
-  "The default file-name for `org-roam-dailies-capture-templates'.
-
-Note that, contrary to `org-roam-capture-templates', the
-relativity is computed from `org-roam-dailies-directory'.")
+  "The default file-name for `org-roam-dailies-capture-templates'.")
 
 (defvar org-roam-dailies-capture--header-default "#+title: %<%Y-%m-%d>\n"
   "The default header for `org-roam-dailies-capture-templates'.")
