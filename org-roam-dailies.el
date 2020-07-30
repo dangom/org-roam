@@ -50,7 +50,7 @@ relativity is computed from `org-roam-dailies-directory'.")
 
 ;;; Customizable variables
 (defcustom org-roam-dailies-directory "daily/"
-  "Directory where daily-notes should live."
+  "Path to daily-notes."
   :group 'org-roam
   :type 'string)
 
