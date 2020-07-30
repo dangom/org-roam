@@ -120,11 +120,6 @@ Template string   :\n%v")
 (declare-function org-roam--find-file         "org-roam")
 (declare-function org-roam-mode               "org-roam")
 
-(defface org-roam-dailies-calendar-note
-  '((t :inherit (org-roam-link)))
-  "Face for dates with a daily-note in the calendar"
-  :group 'org-roam-faces)
-
 (defun org-roam-dailies-directory--get-absolute-path ()
   "Get absolute path to `org-roam-dailies-directory'."
   (-> (concat
