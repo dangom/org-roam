@@ -1097,6 +1097,54 @@ This function hooks into `org-open-at-point' via
             (t
              nil)))))
 
+;;; Completion at point
+(defconst org-roam-open-bracket-regexp
+  "\\[\\[\\([^\]]*\\)")
+
+(defconst org-roam-title-headline-split-regexp
+  "\\([^#]*\\)#?\\(.*\\)")
+
+(defun org-roam--get-titles ()
+  "Get all titles within Org-roam."
+  (mapcar #'car (org-roam-db-query [:select [titles:title] :from titles])))
+
+(defun org-roam-complete-at-point ()
+  "Do appropriate completion for the thing at point."
+  (let ((end (point))
+        start str-to-complete
+        collection
+        realign-after
+        delete-suffix)
+    (cond (;; In an open bracket
+           (looking-back (concat "^.*" org-roam-open-bracket-regexp) (line-beginning-position))
+           (setq start (match-beginning 1)
+                 end (match-end 1)
+                 str-to-complete (match-string 1))
+           (save-match-data
+             (when (string-match org-roam-title-headline-split-regexp str-to-complete)
+               (let ((title (match-string 1 str-to-complete))
+                     (headline (match-string 2 str-to-complete)))
+                 (cond (;; title and headline present
+                        (and (not (string-empty-p title))
+                             (not (string-empty-p headline))))
+                        )
+                       (;; Only title
+                        (not (string-empty-p title))
+                        (setq collection #'org-roam--get-titles))
+                       (;; Only headline
+                        (not (string-empty-p headline)))))))))
+    (when collection
+      (let ((prefix (buffer-substring-no-properties start end)))
+        (list start end
+              (if (functionp collection)
+                  (completion-table-dynamic
+                   (lambda (_)
+                     (cl-remove-if (apply-partially 'string= prefix) (funcall collection))))
+                collection)
+              :exit-function (lambda (&rest _)
+                               (when delete-suffix
+                                 (delete-char delete-suffix)))
+              'ignore)))))
 ;;; Org-roam-mode
 ;;;; Function Faces
 ;; These faces are used by `org-link-set-parameters', which take one argument,
@@ -1141,6 +1189,7 @@ file."
     (setq org-roam-last-window (get-buffer-window))
     (add-hook 'post-command-hook #'org-roam-buffer--update-maybe nil t)
     (add-hook 'after-save-hook #'org-roam-db--update-file nil t)
+    (add-hook 'completion-at-point-functions #'org-roam-complete-at-point nil t)
     (org-roam-buffer--update-maybe :redisplay t)))
 
 (defun org-roam--open-fuzzy-link (link)
