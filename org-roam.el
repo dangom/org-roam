@@ -1102,11 +1102,46 @@ This function hooks into `org-open-at-point' via
   "\\[\\[\\([^\]]*\\)")
 
 (defconst org-roam-title-headline-split-regexp
-  "\\([^#]*\\)#?\\(.*\\)")
+  "\\([^#]*\\)\\(#?\\)\\(.*\\)")
 
 (defun org-roam--get-titles ()
-  "Get all titles within Org-roam."
+  "Return all titles within Org-roam."
   (mapcar #'car (org-roam-db-query [:select [titles:title] :from titles])))
+
+(defun org-roam--get-headlines ()
+  "Return all outline headings."
+  (let* ((bol-regex (concat "^\\(?:" outline-regexp "\\)"))
+         (outline-title-fn (lambda () (buffer-substring (point) (line-end-position))))
+         (outline-level-fn outline-level)
+         (path-separator "/")
+         (stack-level 0)
+         (orig-point (point))
+         (use-stack nil)
+         stack cands name level marker)
+    (save-excursion
+      (goto-char (point-min))
+      (while (re-search-forward bol-regex nil t)
+        (save-excursion
+          (setq name (or (save-match-data
+                           (funcall outline-title-fn))
+                         ""))
+          (when use-stack
+            (goto-char (match-beginning 0))
+            (setq level (funcall outline-level-fn))
+            ;; Update stack.  The empty entry guards against incorrect
+            ;; headline hierarchies, e.g. a level 3 headline
+            ;; immediately following a level 1 entry.
+            (while (<= level stack-level)
+              (pop stack)
+              (cl-decf stack-level))
+            (while (> level stack-level)
+              (push stacked-name stack)
+              (cl-incf stack-level))
+            (setq name (mapconcat #'identity
+                                  (reverse stack)
+                                  path-separator)))
+          (push name cands))))
+    (nreverse cands)))
 
 (defun org-roam-complete-at-point ()
   "Do appropriate completion for the thing at point."
@@ -1123,16 +1158,19 @@ This function hooks into `org-open-at-point' via
            (save-match-data
              (when (string-match org-roam-title-headline-split-regexp str-to-complete)
                (let ((title (match-string 1 str-to-complete))
-                     (headline (match-string 2 str-to-complete)))
+                     (has-headline-p (not (string-empty-p (match-string 2 str-to-complete))))
+                     (headline (match-string 3 str-to-complete)))
                  (cond (;; title and headline present
                         (and (not (string-empty-p title))
-                             (not (string-empty-p headline))))
-                        )
+                             has-headline-p))
                        (;; Only title
-                        (not (string-empty-p title))
+                        (not has-headline-p)
                         (setq collection #'org-roam--get-titles))
                        (;; Only headline
-                        (not (string-empty-p headline)))))))))
+                        (string-empty-p title)
+                        has-headline-p
+                        (setq collection #'org-roam--get-headlines)
+                        (incf start))))))))
     (when collection
       (let ((prefix (buffer-substring-no-properties start end)))
         (list start end
@@ -1145,6 +1183,7 @@ This function hooks into `org-open-at-point' via
                                (when delete-suffix
                                  (delete-char delete-suffix)))
               'ignore)))))
+
 ;;; Org-roam-mode
 ;;;; Function Faces
 ;; These faces are used by `org-link-set-parameters', which take one argument,
