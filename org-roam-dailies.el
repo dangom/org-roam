@@ -271,9 +271,15 @@ With a `C-u' prefix or when GOTO is non-nil, go the note without
 creating an entry."
   (interactive "P")
   (org-roam-dailies-calendar--install-hook)
-  (let ((time (let ((org-read-date-prefer-future prefer-future))
-                (org-read-date nil t nil "Date: "))))
-    (org-roam-dailies--capture time goto)))
+  (let* ((time-str (let ((org-read-date-prefer-future prefer-future))
+                     (org-read-date nil nil nil (if goto
+                                                    "Find: "
+                                                  "Capture to: "))))
+         (time (org-read-date nil t time-str)))
+    (org-roam-dailies--capture time goto)
+    (when goto
+      (run-hooks 'org-roam-dailies-find-file-hook)
+      (message "Showing note for %s" time-str))))
 
 (defun org-roam-dailies-find-date ()
   "Find the daily note for a date using the calendar, creating it if necessary."
