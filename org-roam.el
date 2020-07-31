@@ -1232,10 +1232,16 @@ file."
     (org-roam-buffer--update-maybe :redisplay t)))
 
 (defun org-roam--open-fuzzy-link (link)
-  "Opens Org fuzzy links like [[Title]].
-
+  "Open a Org fuzzy LINK.
 To be added to `org-open-link-functions'. This function always
 resolves, completely replacing Org's original fuzzy link opening behaviour.
+
+There are 3 scenarios:
+TODO
+
+1. [[Title]]
+2. [[#Headline]]
+3. [[Title#Headline]]
 
 1. If there is no resolved file, an Org-roam capture process is launched.
 2. If there is one resolved file, navigate to the file.
